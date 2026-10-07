@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent Vybe: Shadow Quest</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#07101c;color:white;font-family:Arial;text-align:center}
+h1{color:#ffbd22;margin:12px 0 4px}.hud{display:flex;justify-content:space-around;flex-wrap:wrap;padding:8px;background:#101c2d;font-weight:bold}
+#game{position:relative;margin:auto;width:min(96vw,700px);height:70vh;min-height:450px;overflow:hidden;background:linear-gradient(#173c5c,#07101c);border:3px solid #ffbd22;border-radius:15px}
+#player{position:absolute;width:55px;height:55px;border-radius:50%;background:#ffbd22;color:#111;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:5}
+.enemy{position:absolute;width:48px;height:48px;border-radius:50%;background:#8b1835;color:white;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold}
+.coin,.gem{position:absolute;border-radius:50%;font-size:22px}
+.coin{color:#ffd42a}.gem{color:#55e8ff}
+.boss{background:#531b80!important;width:75px;height:75px}
+button{background:#ffbd22;border:0;border-radius:12px;padding:12px 20px;font-weight:bold;font-size:16px;margin:5px}
+.controls{display:grid;grid-template-columns:repeat(3,70px);justify-content:center;gap:7px;margin:10px}
+.controls button{padding:15px;margin:0}.empty{visibility:hidden}
+#msg{min-height:25px;color:#ffbd22;font-weight:bold}
+</style>
+</head>
+<body>
+<h1>👑 AGENT VYBE</h1>
+<div>SHADOW QUEST</div>
+<div class="hud">
+<span>❤️ <b id="hp">100</b></span>
+<span>⚔️ Level <b id="level">1</b></span>
+<span>🪙 <b id="coins">0</b></span>
+<span>💎 <b id="gems">0</b></span>
+</div>
+
+<div id="game">
+<div id="player">VYBE</div>
+</div>
+
+<div id="msg">Defeat the shadows and find the gate!</div>
+<button onclick="attack()">⚔️ ATTACK</button>
+<button onclick="restart()">🔄 RESTART</button>
+
+<div class="controls">
+<button class="empty"></button><button onclick="move(0,-25)">⬆️</button><button class="empty"></button>
+<button onclick="move(-25,0)">⬅️</button><button onclick="attack()">⚔️</button><button onclick="move(25,0)">➡️</button>
+<button class="empty"></button><button onclick="move(0,25)">⬇️</button><button class="empty"></button>
+</div>
+
+<script>
+const G=document.getElementById("game"),P=document.getElementById("player");
+let x=40,y=40,hp=100,level=1,coins=0,gems=0,enemies=[],boss=null;
+
+function pos(el,x,y){el.style.left=x+"px";el.style.top=y+"px"}
+function spawn(){
+ enemies.forEach(e=>e.el.remove());enemies=[];
+ if(boss){boss.remove();boss=null}
+ for(let i=0;i<level+2;i++){
+  let e=document.createElement("div");e.className="enemy";e.textContent="SHADOW";
+  let ex=80+Math.random()*(G.clientWidth-130),ey=60+Math.random()*(G.clientHeight-120);
+  pos(e,ex,ey);G.appendChild(e);enemies.push({el:e,x:ex,y:ey,hp:30+level*10});
+ }
+ if(level%3===0){
+  boss=document.createElement("div");boss.className="enemy boss";boss.textContent="BOSS";
+  pos(boss,G.clientWidth-100,G.clientHeight/2);G.appendChild(boss);
+ }
+ for(let i=0;i<4;i++)item("🪙","coin");
+ for(let i=0;i<2;i++)item("💎","gem");
+}
+function item(t,c){
+ let e=document.createElement("div");e.className=c;e.textContent=t;
+ pos(e,30+Math.random()*(G.clientWidth-60),40+Math.random()*(G.clientHeight-80));
+ G.appendChild(e);
+ e.onclick=()=>{if(c==="coin")coins++;else gems++;e.remove();update()}
+}
+function move(dx,dy){
+ x=Math.max(0,Math.min(G.clientWidth-55,x+dx));
+ y=Math.max(0,Math.min(G.clientHeight-55,y+dy));pos(P,x,y);
+ enemies.forEach(e=>{
+  let d=Math.hypot(e.x-x,e.y-y);
+  if(d<45){hp-=5;update()}
+ });
+ if(boss&&Math.hypot((G.clientWidth-100
